@@ -1,0 +1,17 @@
+# Entorno virtual
+venv/
+.venv/
+
+# Archivos temporales de Python
+__pycache__/
+*.pyc
+
+# Bitácoras
+logs/*.log
+
+# Base de datos de pruebas (SQLite)
+*.db
+
+# Variables de entorno y configuración del editor
+.env
+.vscode/

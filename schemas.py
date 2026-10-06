@@ -1,0 +1,39 @@
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict
+
+
+class UsuarioCreate(BaseModel):
+    nombre: str
+
+
+class UsuarioResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    nombre: str
+    fecha_registro: Optional[datetime] = None
+
+
+class SalaCreate(BaseModel):
+    nombre: str
+    descripcion: Optional[str] = None
+
+
+class SalaResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    nombre: str
+    descripcion: Optional[str] = None
+
+
+class MensajeResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    contenido: str
+    fecha_envio: Optional[datetime] = None
+    usuario_id: int
+    sala_id: int

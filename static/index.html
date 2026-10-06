@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat en tiempo real</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 30px auto; }
+        input, button { padding: 6px; margin: 2px; }
+        #mensajes { border: 1px solid #999; height: 320px; overflow-y: auto; padding: 8px; margin: 10px 0; }
+        .sistema { color: #777; font-style: italic; }
+        .error { color: #b00020; }
+    </style>
+</head>
+<body>
+    <h2>Chat en tiempo real</h2>
+
+    <div>
+        <input id="salaId" type="number" placeholder="ID de la sala">
+        <input id="usuarioId" type="number" placeholder="ID del usuario">
+        <button id="btnConectar">Conectar</button>
+        <button id="btnDesconectar" disabled>Desconectar</button>
+    </div>
+
+    <div id="mensajes"></div>
+
+    <div>
+        <input id="contenido" type="text" placeholder="Escribe un mensaje" size="40" disabled>
+        <button id="btnEnviar" disabled>Enviar</button>
+    </div>
+
+    <script>
+        let ws = null;
+        const mensajes = document.getElementById("mensajes");
+        const contenido = document.getElementById("contenido");
+        const btnConectar = document.getElementById("btnConectar");
+        const btnDesconectar = document.getElementById("btnDesconectar");
+        const btnEnviar = document.getElementById("btnEnviar");
+
+        function agregar(texto, clase) {
+            const p = document.createElement("div");
+            p.textContent = texto;
+            if (clase) p.className = clase;
+            mensajes.appendChild(p);
+            mensajes.scrollTop = mensajes.scrollHeight;
+        }
+
+        function estado(conectado) {
+            btnConectar.disabled = conectado;
+            btnDesconectar.disabled = !conectado;
+            btnEnviar.disabled = !conectado;
+            contenido.disabled = !conectado;
+        }
+
+        btnConectar.onclick = () => {
+            const sala = document.getElementById("salaId").value;
+            const usuario = document.getElementById("usuarioId").value;
+            if (!sala || !usuario) {
+                agregar("Indica el ID de la sala y del usuario", "error");
+                return;
+            }
+            ws = new WebSocket(`ws://${location.host}/ws/${sala}/${usuario}`);
+
+            ws.onopen = () => estado(true);
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.tipo === "sistema") {
+                    agregar(data.mensaje, "sistema");
+                } else if (data.tipo === "error") {
+                    agregar(data.mensaje, "error");
+                } else {
+                    agregar(`[${data.fecha_envio}] ${data.usuario}: ${data.contenido}`);
+                }
+            };
+
+            ws.onclose = () => {
+                estado(false);
+                agregar("Conexion cerrada", "sistema");
+            };
+        };
+
+        btnDesconectar.onclick = () => ws.close();
+
+        function enviar() {
+            ws.send(JSON.stringify({ contenido: contenido.value }));
+            contenido.value = "";
+        }
+
+        btnEnviar.onclick = enviar;
+        contenido.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") enviar();
+        });
+    </script>
+</body>
+</html>
